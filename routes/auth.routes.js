@@ -4,8 +4,8 @@ const jsonwebtoken = require('jsonwebtoken')
 const { isAuthenticated } = require('../middleware/jwt.middleware')
 const User = require('../models/User.model')
 
-router.post('/auth/signup', async (req, res, next) => {
-  const { username, password } = req.body
+router.post('/signup', async (req, res, next) => {
+  const { username, password, email } = req.body
 
   const foundUser = await User.findOne({ username })
 
@@ -18,12 +18,13 @@ router.post('/auth/signup', async (req, res, next) => {
 
   const hashedPassword = await bcrypt.hash(password, salt)
 
-  const createdUser = await User.create({ username, password: hashedPassword })
+  const createdUser = await User.create({ username, password: hashedPassword, email })
 
+  console.log(createdUser)
   res.status(201).json(createdUser)
 })
 
-router.post('/auth/login', async (req, res, next) => {
+router.post('/login', async (req, res, next) => {
   const { username, password } = req.body
 
   const foundUser = await User.findOne({ username })
@@ -38,7 +39,7 @@ router.post('/auth/login', async (req, res, next) => {
 
     const authToken = jsonwebtoken.sign(payload, process.env.TOKEN_SECRET, {
       algorithm: 'HS256',
-      expiresIn: '1h',
+      expiresIn: '24h',
     })
 
     res.status(200).send({ authToken: authToken })
@@ -48,7 +49,7 @@ router.post('/auth/login', async (req, res, next) => {
   }
 })
 
-router.get('/auth/verify', isAuthenticated, (req, res, next) => {
+router.get('/verify', isAuthenticated, (req, res, next) => {
   res.status(200).json(req.payload)
 })
 
