@@ -3,6 +3,7 @@ const Move = require('../models/Move.model')
 const Game = require('../models/Game.model')
 const User = require('../models/User.model');
 const { isAuthenticated } = require("../middleware/jwt.middleware");
+const { isValidMove } = require("../logic/isValidMove");
 
 router.post('/', isAuthenticated, async (req, res, next) => {
 
