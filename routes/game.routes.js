@@ -18,13 +18,31 @@ router.post('/', isAuthenticated, async (req, res, next) => {
             walls: req.body.walls
 
         })
-
         res.status(201).json({newGame})
+        res.render(`/${newGame._id}`)
     }
     catch(error) {
         next(error)
     }
     
+})
+
+router.post('/:id', isAuthenticated, async (req, res, next) => {
+    try {
+        const userToken = req.payload;
+        // const gameId = req.params.id;
+        const {x, y, action, order, player, gameId} = req.body
+        console.log(req.body);
+        if (isValidMove(req.body)) {
+            const move = await Move.create(req.body)
+            res.json({move})
+        } else {
+            res.json("Invalid move")
+        }
+    }
+    catch(error) {
+        next(error)
+    }
 })
 
 module.exports = router
