@@ -9,12 +9,13 @@ router.post('/', isAuthenticated, async (req, res, next) => {
     try {
         const userToken = req.payload
         const user = await User.findOne({username: userToken.username})
-        console.log(user)
         const black = await User.findOne({username: req.body.username})
         const newGame = await Game.create(
         {   
             white: user._id,
-            black: black._id
+            black: black._id,
+            boardsize: req.body.size,
+            walls: req.body.walls
 
         })
 
