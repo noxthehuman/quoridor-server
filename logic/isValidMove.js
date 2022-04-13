@@ -17,13 +17,23 @@ async function isInRange(move) {
     switch (action) {
         case "move":
             return (x >= 1 && x <= size && y >= 1 && y <= size);
-        case "horizontal":
-            return (x >= 1 && x < size && y >= 1 && y < size);
-        case "vertical":
+        case "horizontal": case "vertical":
             return (x >= 1 && x < size && y >= 1 && y < size);
         default:
             return 1;
     }
 }
+
+async function hasWallLeft(move) {
+    const {action, player, game} = move;
+    if (action === ("horizontal" || "vertical")) {
+        const availableWalls = await Game.findOne({game: game}).walls;
+        const placedWalls = await Move.findAll({action: ("horizontal" || "vertical"), player: player, game: game});
+        return (placedWalls <= availableWalls);
+    }
+    return 1;
+}
+
+
 
 
