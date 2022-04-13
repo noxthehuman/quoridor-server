@@ -5,7 +5,7 @@ const gameSchema = new Schema(
     white: {type: Schema.Types.ObjectId, ref: 'User', required: true},
     black: {type: Schema.Types.ObjectId, ref: 'User', required: true},
     boardsize: {type: Number, default: 9},
-    fences: {type: Number, default: 10},
+    walls: {type: Number, default: 10},
     status: {type: String, enum: ['win','loss', 'draw', 'undefined'], default: 'undefined'}
   },
   {
