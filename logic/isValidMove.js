@@ -1,8 +1,22 @@
+const Game = require('../models/Game.model');
 const Move = require('../models/Move.model')
+
+async function isValidMove(move) {
+    return (
+    isPlayerTurn(move) 
+    && isOrderCorrect(move)
+    && isInRange(move)
+    && canUseWall(move)
+    && isWallPositionFree(move)
+    && isMoveReachable(move)
+    && isPositionFree(move)
+    && dontCrossWall(move)
+    && isJumpValid(move)
+    )
+}
 
 async function isPlayerTurn(move) {
     const {order, player, game} = move;
-    // if (order === 1) {return 1};
     const previousMove = await Move.findOne({order: order-1, game: game});
     return !(player === previousMove.player);
 }
