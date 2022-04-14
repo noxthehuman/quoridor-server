@@ -20,8 +20,8 @@ router.post('/', isAuthenticated, async (req, res, next) => {
             walls: req.body.walls
 
         })
-        res.status(201).json({newGame})
-        res.render(`/${newGame._id}`)
+        const game = await Game.findById(newGame._id).populate('white black')
+        res.status(201).json({game})
     }
     catch(error) {
         next(error)
