@@ -6,7 +6,7 @@ const gameSchema = new Schema(
     black: {type: Schema.Types.ObjectId, ref: 'User', required: true},
     boardSize: {type: Number, default: 9},
     walls: {type: Number, default: 10},
-    status: {type: String, enum: ['white','black', 'draw', 'pending'], default: 'pending'}
+    status: {type: String, enum: ['white', 'black', 'draw', 'pending'], default: 'pending'}
   },
   {
     timestamps: true,
