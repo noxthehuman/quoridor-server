@@ -6,10 +6,10 @@ const Game = require('../models/Game.model')
 router.get('/', isAuthenticated, async (req, res, next)=> {
     try {
         const user = req.payload
-        console.log(req.payload)
+        //console.log(req.payload)
         const userInfo = await User.findOne({username: user.username})
-        const gamesInfo = await Game.find()
-        res.status(201).json({userInfo, gamesInfo})
+        const gamesInfo = await Game.find().populate("white black")
+        res.status(201).json({userInfo: userInfo, gamesInfo: gamesInfo})
     }
     catch(error) {
         next(error)

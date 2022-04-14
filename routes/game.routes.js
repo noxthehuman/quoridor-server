@@ -7,6 +7,7 @@ const { isAuthenticated } = require("../middleware/jwt.middleware");
 router.post('/', isAuthenticated, async (req, res, next) => {
 
     try {
+        console.log(req.body)
         const userToken = req.payload
         const user = await User.findOne({username: userToken.username})
         const black = await User.findOne({username: req.body.username})
@@ -14,7 +15,7 @@ router.post('/', isAuthenticated, async (req, res, next) => {
         {   
             white: user._id,
             black: black._id,
-            boardsize: req.body.size,
+            boardSize: req.body.boardSize,
             walls: req.body.walls
 
         })
