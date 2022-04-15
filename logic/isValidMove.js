@@ -1,7 +1,7 @@
 const Game = require('../models/Game.model');
 const Move = require('../models/Move.model')
 
-async function isValidMove(move) {
+async function isValidMove(move){
     return (
     isPlayerTurn(move) 
     && isOrderCorrect(move)
@@ -128,6 +128,4 @@ async function isJumpValid(move) {
     return 1;
 }
 
-
-
-
+module.exports = {isValidMove}
