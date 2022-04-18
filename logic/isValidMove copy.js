@@ -50,7 +50,7 @@ async function isInRange(move) {
 }
 
 async function canUseWall(move) {
-    const {player, game} = move;
+    const {action, player, game} = move;
     const availableWalls = await Game.findOne({game: game}).walls;
     const playerWalls = await Move.findAll({action: ("horizontal" || "vertical"), player: player, game: game});
     return (playerWalls.length <= availableWalls);
@@ -92,7 +92,7 @@ async function isWallPositionFree(move) {
 }
 
 async function isMoveReachable(move) {
-    const {x, y, player, game} = move;
+    const {x, y, action, player, game} = move;
     const lastMove = await Move.findOne({action: "move", player: player, game: game}).sort({order: -1});
     return (!(x === lastMove.x && y === lastMove.y) 
             && ((Math.abs(x-lastMove.x) < 2 && Math.abs(y-lastMove.y) < 2)
@@ -101,49 +101,39 @@ async function isMoveReachable(move) {
 }
 
 async function isPositionFree(move) {
-    const {x, y, player, game} = move;
+    const {x, y, action, player, game} = move;
     const opponent = (player === white) ? "black" : "white";
     const lastOpponentMove = await Move.findOne({action: "move", player: opponent, game: game}).sort({order: -1});
     return (!(x === lastOpponentMove.x && y === lastOpponentMove.y))
 }
 
+
 async function dontCrossWall(move) {
-    const {x, y, player, game} = move;
+    const {x, y, action, player, game} = move;
     const lastMove = await Move.findOne({action: "move", player: player, game: game}).sort({order: -1});
     let wall;
-    if (isAdjacent(x,lastMove.x) && y === lastMove.y + 1) {
-        wall = await Move.findOne({x: (x || x - 1), y: y - 1, action: ("horizontal"), game: game});
-    } else if (isAdjacent(x,lastMove.x) && y === lastMove.y - 1) {
-        wall = await Move.findOne({x: (x || x - 1), y: y, action: ("horizontal"), game: game});
-    } else if (x === lastMove.x - 1  && isAdjacent(y,lastMove.y)) {
-        wall = await Move.findOne({x: x, y: (y || y - 1), action: ("vertical"), game: game});
-    } else if (x === lastMove.x + 1 && isAdjacent(y,lastMove.y)) {
-        wall = await Move.findOne({x: x - 1, y: (y || y - 1), action: ("vertical"), game: game});
-    }   
-    return (wall === null);   
+    switch (true) {
+        case (isAdjacent(x,lastMove.x) && y === lastMove.y + 1):
+            wall = await Move.findOne({x: (x || x - 1), y: y - 1, action: ("horizontal"), game: game});
+            return (wall === null);
+        case (isAdjacent(x,lastMove.x) && y === lastMove.y - 1):
+            wall = await Move.findOne({x: (x || x - 1), y: y, action: ("horizontal"), game: game});
+            return (wall === null);
+        case (x === lastMove.x - 1  && isAdjacent(y,lastMove.y)):
+            wall = await Move.findOne({x: x, y: (y || y - 1), action: ("vertical"), game: game});
+            return (wall === null);   
+        case (x === lastMove.x + 1 && isAdjacent(y,lastMove.y)):
+            wall = await Move.findOne({x: x - 1, y: (y || y - 1), action: ("vertical"), game: game});
+            return (wall === null);   
+      default:
+            return 1;
+    }
 }
 
-async function validStraightJump(move) {
-    const boardsize = await Game.findOne({game: move.game}).boardsize;
-    const lastPos = await Move.findOne({action: "move", player: move.player, game: move.game}).sort({order: -1});
-    const opponent = (move.player === white) ? "black" : "white";
-    const advPos = await Move.findOne({action: "move", player: opponent, game: move.game}).sort({order: -1});
-    let wall;
-    if (advPos.x === lastPos.x && advPos.x === move.x && advPos.y === lastPos.y + 1 && advPos.y === move.y - 1) {
-        wall = await Move.findOne({x: (advPos.x || advPos.x - 1), y: (advPos.y || advPos.y - 1), action: "horizontal", game: move.game});
-    } else if (advPos.x === lastPos.x + 1 && advPos.x === move.x - 1 && advPos.y === lastPos.y && advPos.y === move.y) {
-        wall = await Move.findOne({x: (advPos.x || advPos.x - 1), y: (advPos.y || advPos.y - 1), action: "vertical", game: move.game});
-    } else if (advPos.x === lastPos.x && advPos.x === move.x && advPos.y === lastPos.y - 1 && advPos.y === move.y + 1) {
-        wall = await Move.findOne({x: (advPos.x || advPos.x - 1), y: (advPos.y || advPos.y - 1), action: "horizontal", game: move.game});
-    } else if (advPos.x === lastPos.x && advPos.x === move.x && advPos.y === lastPos.y - 1 && advPos.y === move.y + 1) {
-        wall = await Move.findOne({x: (advPos.x || advPos.x - 1), y: (advPos.y || advPos.y - 1), action: "vertical", game: move.game});
-    }   
-    return (wall === null);   
-}
-
-function configuration(lastX, lastY, currentX, currentY, opponentX, opponentY, direction) {
-    return (currentX === lastX && opponentY === lastY + direction 
-        && opponentY === currentY && (currentX === currentX - 1 || currentX === currentX + 1))
+function validJump(lastX, lastY, currentX, currentY, opponentX, opponentY, wall, direction, boardsize) {
+    return ((currentX === lastX && opponentY === lastY + direction)
+        && (opponentY === currentY && (currentX === currentX - 1 || currentX === currentX + 1))
+        && (wall || opponentY === (direction === 1) ? boardsize : 1))
 }
 
 async function validSideJump(move) {
@@ -151,25 +141,36 @@ async function validSideJump(move) {
     const lastPosition = await Move.findOne({action: "move", player: move.player, game: move.game}).sort({order: -1});
     const opponent = (move.player === white) ? "black" : "white";
     const opponentPosition = await Move.findOne({action: "move", player: opponent, game: move.game}).sort({order: -1});
-    let wall;
-    if (configuration(lastPosition.x, lastPosition.y, move.x, move.y, opponentPosition.x, opponentPosition.y, 1)) {
-        wall = await Move.findOne({x: (opponentPosition.x || opponentPosition.x - 1), y: opponentPosition.y , action: "horizontal", game: move.game});
-        return (wall || opponent.y === boardsize);
-    } else if (configuration(lastPosition.y, lastPosition.x, move.y, move.x, opponentPosition.y, opponentPosition.x, 1)) {
-        wall = await Move.findOne({x: opponentPosition.x, y: (opponentPosition.y || opponentPosition.y - 1) , action: "vertical", game: move.game});
-        return (wall || opponent.x === boardsize);
-    } else if (configuration(lastPosition.x, lastPosition.y, move.x, move.y, opponentPosition.x, opponentPosition.y, -1)) {
-        wall = await Move.findOne({x: (opponentPosition.x || opponentPosition.x - 1), y: opponentPosition.y - 1, action: "horizontal", game: move.game});
-        return (wall || opponent.y === 1);
-    } else if (configuration(lastPosition.y, lastPosition.x, move.y, move.x, opponentPosition.y, opponentPosition.x, -1))  {
-        wall = await Move.findOne({x: opponentPosition.x - 1, y: (opponentPosition.y || opponentPosition.y - 1) , action: "vertical", game: move.game});
-        return (wall || opponent.x === 1);
-    }   
-    return 1;
+    const horizontalUpWall = await Move.findOne({x: (opponentPosition.x || opponentPosition.x - 1), y: opponentPosition.y , action: "horizontal", game: move.game});
+    const horizontalDownWall = await Move.findOne({x: (opponentPosition.x || opponentPosition.x - 1), y: opponentPosition.y - 1, action: "horizontal", game: move.game});
+    const verticalUpWall = await Move.findOne({x: opponentPosition.x, y: (opponentPosition.y || opponentPosition.y - 1) , action: "vertical", game: move.game});
+    const verticalDownWall = await Move.findOne({x: opponentPosition.x - 1, y: (opponentPosition.y || opponentPosition.y - 1) , action: "vertical", game: move.game});
+    return (validJump(lastPosition.x, lastPosition.y, move.x, move.y, opponentPosition.x, opponentPosition.y, horizontalUpWall, 1, boardsize)
+        || validJump(lastPosition.y, lastPosition.x, move.y, move.x, opponentPosition.y, opponentPosition.x, verticalUpWall, 1, boardsize)
+        || validJump(lastPosition.x, lastPosition.y, move.x, move.y, opponentPosition.x, opponentPosition.y, horizontalDownWall, -1, boardsize)
+        || validJump(lastPosition.y, lastPosition.x, move.y, move.x, opponentPosition.y, opponentPosition.x, verticalDownWall, -1, boardsize)
+    )
+}
+
+async function validSraightJump(move) {
+    const lastPosition = await Move.findOne({action: "move", player: move.player, game: move.game}).sort({order: -1});
+    const opponent = (move.player === white) ? "black" : "white";
+    const opponentPosition = await Move.findOne({action: "move", player: opponent, game: move.game}).sort({order: -1});
+    const horizontalUpWall = await Move.findOne({x: (opponentPosition.x || opponentPosition.x - 1), y: opponentPosition.y , action: "horizontal", game: move.game});
+    const horizontalDownWall = await Move.findOne({x: (opponentPosition.x || opponentPosition.x - 1), y: opponentPosition.y - 1, action: "horizontal", game: move.game});
+    const verticalUpWall = await Move.findOne({x: opponentPosition.x, y: (opponentPosition.y || opponentPosition.y - 1) , action: "vertical", game: move.game});
+    const verticalDownWall = await Move.findOne({x: opponentPosition.x - 1, y: (opponentPosition.y || opponentPosition.y - 1) , action: "vertical", game: move.game});
+    return (validJump(lastPosition.x, lastPosition.y, move.x, move.y, opponentPosition.x, opponentPosition.y, horizontalUpWall, 1, boardsize)
+        || validJump(lastPosition.y, lastPosition.x, move.y, move.x, opponentPosition.y, opponentPosition.x, verticalUpWall, 1, boardsize)
+        || validJump(lastPosition.x, lastPosition.y, move.x, move.y, opponentPosition.x, opponentPosition.y, horizontalDownWall, -1, boardsize)
+        || validJump(lastPosition.y, lastPosition.x, move.y, move.x, opponentPosition.y, opponentPosition.x, verticalDownWall, -1, boardsize)
+    )
 }
 
 async function isJumpValid(move) {
     return (validSideJump(move) || validSraightJump(move));
 }
+
+
 
 module.exports = {isValidMove}
