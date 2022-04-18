@@ -32,12 +32,11 @@ router.post('/', isAuthenticated, async (req, res, next) => {
 router.post('/:id', isAuthenticated, async (req, res, next) => {
     try {
         const userToken = req.payload;
-        // const gameId = req.params.id;
-        //const {x, y, action, order, player, gameId} = req.body
-        //console.log(req.body);
-        if (isValidMove(req.body)) {
+        console.log(req.body)
+        const valid = await isValidMove(req.body)
+        if (valid) {
             const move = await Move.create(req.body)
-            res.json({move})
+            res.json(move)
         } else {
             res.json("Invalid move")
         }
