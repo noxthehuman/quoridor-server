@@ -29,12 +29,12 @@ async function isOrderCorrect(move) {
 
 async function isInRange(move) {
     const {x, y, action, game} = move;
-    const size = await Game.findOne({game: game}).boardsize;
+    const boardsize = await Game.findOne({game: game}).boardsize;
     switch (action) {
         case "move":
-            return (x >= 1 && x <= size && y >= 1 && y <= size);
+            return (x >= 1 && x <= boardsize && y >= 1 && y <= boardsize);
         case "horizontal": case "vertical":
-            return (x >= 1 && x < size && y >= 1 && y < size);
+            return (x >= 1 && x < boardsize && y >= 1 && y < boardsize);
         default:
             return 1;
     }
@@ -124,8 +124,26 @@ async function dontCrossWall(move) {
     }
 }
 
+function validJump(lastX, lastY, currentX, currentY, opponentX, opponentY, wall, direction, boardsize) {
+    return ((currentX === lastX && opponentY === lastY + direction)
+        && (opponentY === currentY && (currentX === currentX - 1 || currentX === currentX + 1))
+        && (wall || opponentY === (direction === 1) ? boardsize : 1))
+}
+
 async function isJumpValid(move) {
-    return 1;
+    if (move.action !== "move")
+        return 1;
+    const boardsize = await Game.findOne({game: move.game}).boardsize;
+    const lastPosition = await Move.findOne({action: "move", player: move.player, game: move.game}).sort({order: -1});
+    const opponent = (move.player === white) ? "black" : "white";
+    const opponentPosition = await Move.findOne({action: "move", player: opponent, game: move.game}).sort({order: -1});
+    const horizontalWall = await Move.findOne({x: (opponentPosition.x || opponentPosition.x + 1), y: opponentPosition.y , action: "horizontal", game: move.game});
+    const verticalWall = await Move.findOne({x: opponentPosition.x, y: (opponentPosition.y || opponentPosition.y + 1) , action: "vertical", game: move.game});
+    return (validJump(lastPosition.x, lastPosition.y, move.x, move.y, opponentPosition.x, opponentPosition.y, horizontalWall, 1, boardsize)
+        || validJump(lastPosition.y, lastPosition.x, move.y, move.x, opponentPosition.y, opponentPosition.x, verticalWall, 1, boardsize)
+        || validJump(lastPosition.x, lastPosition.y, move.x, move.y, opponentPosition.x, opponentPosition.y, horizontalWall, -1, boardsize)
+        || validJump(lastPosition.y, lastPosition.x, move.y, move.x, opponentPosition.y, opponentPosition.x, verticalWall, -1, boardsize)
+    )
 }
 
 module.exports = {isValidMove}
