@@ -17,4 +17,16 @@ router.get('/', isAuthenticated, async (req, res, next)=> {
 
 })
 
+router.delete('/delete', isAuthenticated, async (req, res, next)=>{
+    try {
+        const user = req.payload
+        await User.findOneAndDelete({username: user.username})
+        res.status(200).json('User succesfully deleted')
+
+    }
+    catch(error) {
+        next(error)
+    }
+})
+
 module.exports = router;
