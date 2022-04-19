@@ -7,28 +7,28 @@ function startPos(player, boardSize) {
 
 async function isValidMove(move) {
 
-    // if (!(await isPlayerTurn(move) || await isOrderCorrect(move))) {
-    //     return (0);
-    // }
+    if (!(await isPlayerTurn(move) || await isOrderCorrect(move))) {
+        return (0);
+    }
     const {boardSize} = await Game.findById(move.game);
-    // if (!isInRange(move, boardSize)) {
-    //     return (0);
-    // }
+    if (!isInRange(move, boardSize)) {
+        return (0);
+    }
     if (move.action === "move") {
         const Pos = await Move.findOne({action: "move", player: move.player, game: move.game}).sort({order: -1}) || startPos(move.player, boardSize);
         const opponent = (move.player === "white") ? "black" : "white";
         const oppPos = await Move.findOne({action: "move", player: opponent, game: move.game}).sort({order: -1}) || startPos(opponent, boardSize);
         return (1 
             && isMoveReachable(move, boardSize, Pos)
-            // && isPositionFree(move, oppPos)
-            // && await dontCrossWall(move, Pos)
-            && await isStraightJumpValid(move, Pos, oppPos)
-            // && await isSideJumpValid(move, boardSize, Pos, oppPos)
+            && isPositionFree(move, oppPos)
+            && await dontCrossWall(move, Pos)
+            // && await isStraightJumpValid(move, Pos, oppPos)
+            && await isSideJumpValid(move, boardSize, Pos, oppPos)
         );
     }
     if (move.action === "horizontal" || move.action === "vertical") {
         return (1
-            // && await canUseWall(move)
+            && await canUseWall(move)
             // && await isWallPositionFree(move)
         );
     }
@@ -37,14 +37,16 @@ async function isValidMove(move) {
 
 async function isPlayerTurn(move) {
     const {order, player, game} = move;
-    if (order === 1) {return};
+    if (order === 1) {return 1};
     const previousMove = await Move.findOne({order: order-1, game: game});
     return !(player === previousMove.player);
 }
 
 async function isOrderCorrect(move) {
     const {order, game} = move;
+    if (order === 1) {return 1};
     const lastAction = await Move.findOne({game: game}).sort({order: -1});
+    console.log('last move' ,lastAction)
     return (order === lastAction.order + 1);
 }
 
@@ -134,7 +136,7 @@ async function isSideJumpValid(move, boardSize, Pos, oppPos) {
 async function canUseWall(move) {
     const {player, game} = move;
     const {walls} = await Game.findById(game);
-    const playerWalls = await Move.findAll({action: ("horizontal" || "vertical"), player: player, game: game});
+    const playerWalls = await Move.find({action: ("horizontal" || "vertical"), player: player, game: game});
     return (playerWalls.length <= walls);
 }
 
