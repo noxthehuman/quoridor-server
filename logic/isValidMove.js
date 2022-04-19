@@ -118,27 +118,51 @@ function configuration(lastX, lastY, currentX, currentY, opponentX, opponentY, d
 }
 
 async function isSideJumpValid(move, boardSize, Pos, oppPos) {
+    if (!((move.x === Pos.x - 1 || move.x === Pos.x + 1) && (move.y === Pos.y - 1 || move.y === Pos.y + 1))) {
+        return (1);
+    }
     let wall;
-    if ((move.x === Pos.x - 1 || move.x === Pos.x + 1) && move.y === Pos.y + 1) {
+    if (oppPos.x === Pos.x && oppPos.y === Pos.y + 1) {
         wall = await Move.findOne({x: (oppPos.x || oppPos.x - 1), y: oppPos.y, action: "horizontal", game: move.game});
         console.log("1",wall)
-        return (oppPos.x === Pos.x && oppPos.y === Pos.y + 1 && (wall || oppPos.y === boardSize));
-    } else if (move.x === Pos.x + 1 && (move.y === Pos.y - 1 || move.y === Pos.y + 1)) {
+        return (wall || oppPos.y === boardSize);
+    } else if (oppPos.x === Pos.x + 1 && oppPos.y === Pos.y) {
         wall = await Move.findOne({x: oppPos.x, y: (oppPos.y || oppPos.y - 1), action: "vertical", game: move.game});
-        console.log("2", oppPos.x === Pos.x + 1 && oppPos.y === Pos.y && (wall || oppPos.x === boardSize))
-        console.log("2", oppPos.x === Pos.x + 1 && oppPos.y === Pos.y)
         console.log("2",wall)
-        return (oppPos.x === Pos.x + 1 && oppPos.y === Pos.y && (wall || oppPos.x === boardSize));
-    } else if  ((move.x === Pos.x - 1 || move.x === Pos.x + 1) && move.y === Pos.y - 1) {
+        return (wall || oppPos.x === boardSize);
+    } else if  (oppPos.x === Pos.x && oppPos.y === Pos.y - 1) {
         wall = await Move.findOne({x: (oppPos.x || oppPos.x - 1), y: oppPos.y - 1, action: "horizontal", game: move.game});
         console.log("3", oppPos.x === Pos.x && oppPos.y === Pos.y - 1 && (wall || oppPos.y === 1))
-        return (oppPos.x === Pos.x && oppPos.y === Pos.y - 1 && (wall || oppPos.y === 1));
-    } else if (move.x === Pos.x - 1 && (move.y === Pos.y - 1 || move.y === Pos.y + 1)) {
+        return (wall || oppPos.y === 1);
+    } else if (oppPos.x === Pos.x - 1 && oppPos.y === Pos.y) {
         wall = await Move.findOne({x: oppPos.x - 1, y: (oppPos.y || oppPos.y - 1), action: "vertical", game: move.game});
         console.log("4",  wall)
-        return (oppPos.x === Pos.x - 1 && oppPos.y === Pos.y && (wall || oppPos.x === 1));
-    }  else {return 1};
+        return (wall || oppPos.x === 1);
+    }  else {return 0};
 }
+
+// async function isSideJumpValid(move, boardSize, Pos, oppPos) {
+//     let wall;
+//     if ((move.x === Pos.x - 1 || move.x === Pos.x + 1) && move.y === Pos.y + 1) {
+//         wall = await Move.findOne({x: (oppPos.x || oppPos.x - 1), y: oppPos.y, action: "horizontal", game: move.game});
+//         console.log("1",wall)
+//         return (oppPos.x === Pos.x && oppPos.y === Pos.y + 1 && (wall || oppPos.y === boardSize));
+//     } else if (move.x === Pos.x + 1 && (move.y === Pos.y - 1 || move.y === Pos.y + 1)) {
+//         wall = await Move.findOne({x: oppPos.x, y: (oppPos.y || oppPos.y - 1), action: "vertical", game: move.game});
+//         console.log("2", oppPos.x === Pos.x + 1 && oppPos.y === Pos.y && (wall || oppPos.x === boardSize))
+//         console.log("2", oppPos.x === Pos.x + 1 && oppPos.y === Pos.y)
+//         console.log("2",wall)
+//         return (oppPos.x === Pos.x + 1 && oppPos.y === Pos.y && (wall || oppPos.x === boardSize));
+//     } else if  ((move.x === Pos.x - 1 || move.x === Pos.x + 1) && move.y === Pos.y - 1) {
+//         wall = await Move.findOne({x: (oppPos.x || oppPos.x - 1), y: oppPos.y - 1, action: "horizontal", game: move.game});
+//         console.log("3", oppPos.x === Pos.x && oppPos.y === Pos.y - 1 && (wall || oppPos.y === 1))
+//         return (oppPos.x === Pos.x && oppPos.y === Pos.y - 1 && (wall || oppPos.y === 1));
+//     } else if (move.x === Pos.x - 1 && (move.y === Pos.y - 1 || move.y === Pos.y + 1)) {
+//         wall = await Move.findOne({x: oppPos.x - 1, y: (oppPos.y || oppPos.y - 1), action: "vertical", game: move.game});
+//         console.log("4",  wall)
+//         return (oppPos.x === Pos.x - 1 && oppPos.y === Pos.y && (wall || oppPos.x === 1));
+//     }  else {return 1};
+// }
 
 
 // async function isSideJumpValid(move, boardSize, Pos, oppPos) {
