@@ -20,7 +20,7 @@ async function isValidMove(move) {
         const oppPos = await Move.findOne({action: "move", player: opponent, game: move.game}).sort({order: -1}) || startPos(opponent, boardSize);
         return (1 
             && isMoveReachable(move, boardSize, Pos)
-            // && isPositionFree(move, oppPos)
+            && isPositionFree(move, oppPos)
             // && await dontCrossWall(move, Pos)
             && await isStraightJumpValid(move, Pos, oppPos)
             // && await isSideJumpValid(move, boardSize, Pos, oppPos)
