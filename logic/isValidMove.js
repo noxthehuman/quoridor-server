@@ -133,14 +133,14 @@ async function isSideJumpValid(move, boardSize, Pos, oppPos) {
 
 async function canUseWall(move) {
     const {player, game} = move;
-    const availableWalls = await Game.findOne({game: game}).walls;
+    const {walls} = await Game.findById(game);
     const playerWalls = await Move.findAll({action: ("horizontal" || "vertical"), player: player, game: game});
-    return (playerWalls.length <= availableWalls);
+    return (playerWalls.length <= walls);
 }
 
 async function isWallPositionFree(move) {
     const {x, y, action, game} = move;
-    const placedWalls = await Move.findAll({action: ("horizontal" || "vertical"), game: game});
+    const placedWalls = await Move.find({action: ("horizontal" || "vertical"), game: game});
     if (action === "horizontal" ) {
         placedWalls.forEach(wall => {
             if (y === wall.y) {
