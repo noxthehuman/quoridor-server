@@ -51,48 +51,6 @@ async function isInRange(move) {
     }
 }
 
-async function canUseWall(move) {
-    const {player, game} = move;
-    const availableWalls = await Game.findOne({game: game}).walls;
-    const playerWalls = await Move.findAll({action: ("horizontal" || "vertical"), player: player, game: game});
-    return (playerWalls.length <= availableWalls);
-}
-
-function isAdjacent(x,y) {
-    return (x === y - 1 || x === y || x === y + 1)
-}
-
-async function isWallPositionFree(move) {
-    const {x,y, action, game} = move;
-    if (action === "horizontal" ) {
-        const playedWalls = await Move.findAll({action: ("horizontal" || "vertical"), game: game});
-        playedWalls.forEach(wall => {
-            if (y === wall.y) {
-                if (x === wall.x && wall.action === "vertical") {
-                    return 0;
-                }
-                if (isAdjacent(x, wall.x) && wall.action === "horizontal") {
-                    return 0;
-                }
-            }
-        });
-    };
-    if (action === "vertical") {
-        const playedWalls = await Move.findAll({action: ("horizontal" || "vertical"), game: game});
-        playedWalls.forEach(wall => {
-            if (x === wall.x) {
-                if (y === wall.y && wall.action === "horizontal") {
-                    return 0;
-                }
-                if (isAdjacent(y, wall.y) && wall.action === "vertical") {
-                    return 0;
-                }
-            }
-        });
-    };
-    return 1;
-}
-
 async function isMoveReachable(move) {
     const {x, y, player, game} = move;
     const lastMove = await Move.findOne({action: "move", player: player, game: game}).sort({order: -1});
@@ -108,6 +66,11 @@ async function isPositionFree(move) {
     const opponent = (player === white) ? "black" : "white";
     const lastOpponentMove = await Move.findOne({action: "move", player: opponent, game: game}).sort({order: -1});
     return (!(x === lastOpponentMove.x && y === lastOpponentMove.y))
+}
+
+
+function isAdjacent(x,y) {
+    return (x === y - 1 || x === y || x === y + 1)
 }
 
 async function dontCrossWall(move) {
@@ -171,7 +134,46 @@ async function validSideJump(move) {
 }
 
 async function isJumpValid(move) {
-    return (validSideJump(move) || validSraightJump(move));
+    return (await validSideJump(move) || await validSraightJump(move));
 }
+
+async function canUseWall(move) {
+    const {player, game} = move;
+    const availableWalls = await Game.findOne({game: game}).walls;
+    const playerWalls = await Move.findAll({action: ("horizontal" || "vertical"), player: player, game: game});
+    return (playerWalls.length <= availableWalls);
+}
+
+async function isWallPositionFree(move) {
+    const {x,y, action, game} = move;
+    if (action === "horizontal" ) {
+        const playedWalls = await Move.findAll({action: ("horizontal" || "vertical"), game: game});
+        playedWalls.forEach(wall => {
+            if (y === wall.y) {
+                if (x === wall.x && wall.action === "vertical") {
+                    return 0;
+                }
+                if (isAdjacent(x, wall.x) && wall.action === "horizontal") {
+                    return 0;
+                }
+            }
+        });
+    };
+    if (action === "vertical") {
+        const playedWalls = await Move.findAll({action: ("horizontal" || "vertical"), game: game});
+        playedWalls.forEach(wall => {
+            if (x === wall.x) {
+                if (y === wall.y && wall.action === "horizontal") {
+                    return 0;
+                }
+                if (isAdjacent(y, wall.y) && wall.action === "vertical") {
+                    return 0;
+                }
+            }
+        });
+    };
+    return 1;
+}
+
 
 module.exports = {isValidMove}
