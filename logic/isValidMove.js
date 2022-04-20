@@ -49,7 +49,7 @@ function isInRange(move, boardSize) {
         case "horizontal": case "vertical":
             return (x >= 1 && x < boardSize && y >= 1 && y < boardSize);
         default:
-            return (1);
+            return 1;
     }
 }
 
