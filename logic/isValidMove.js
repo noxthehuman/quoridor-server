@@ -3,8 +3,8 @@ const Move = require('../models/Move.model');
 
 function startPos(player, boardSize) {
     return (player === "white" ? 
-    {x: boardSize - ~~(.5 * boardSize), y: 1} 
-    : {x: ~~(.5 * boardSize) + 1, y: boardSize});
+    {x: boardSize - ~~(.5 * boardSize), y: 1} :
+    {x: ~~(.5 * boardSize) + 1, y: boardSize});
 }
 
 async function isValidMove(move) {
