@@ -6,6 +6,7 @@ const moveSchema = new Schema(
     y: {type: Number, min: 1, max: 9},
     action: {type: String, enum: ['move', 'horizontal', 'vertical', 'resign']},
     order: {type: Number},
+    time: {type: String, default:'0'},
     player: {type: String, enum: ['white', 'black']},
     game: {type: Schema.Types.ObjectId, ref: 'Game'}
   },
