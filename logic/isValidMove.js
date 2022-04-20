@@ -78,8 +78,7 @@ async function dontCrossWall(move, Pos) {
         wall = await Move.findOne({x: Pos.x - 1, y: [Pos.y, Pos.y - 1], action: "vertical", game: move.game});
     } else if (move.x === Pos.x + 1 && move.y === Pos.y) {
         wall = await Move.findOne({x: Pos.x, y: [Pos.y, Pos.y - 1], action: "vertical", game: move.game});
-    }   
-    return (!wall);   
+    } return (!wall);   
 }
 
 async function isStraightJumpValid(move, Pos, oppPos) {
@@ -130,10 +129,10 @@ async function canUseWall(move) {
 async function isWallPositionFree(move) {
     const {x, y, action, game} = move;
     const placedWalls = await Move.find({action: ["horizontal", "vertical"], game: game});
-    if (action === "horizontal" ) {
+    if (action === "horizontal") {
         return (!(placedWalls.reduce((n, wall) => (y === wall.y && ((x === wall.x && wall.action === "vertical") || (isAdjacent(x, wall.x) && wall.action === "horizontal")) ? n + 1 : n), 0)));
     }
-    if (action === "vertical" ) {
+    if (action === "vertical") {
         return (!(placedWalls.reduce((n, wall) => (x === wall.x && ((y === wall.y && wall.action === "horizontal") || (isAdjacent(y, wall.y) && wall.action === "vertical")) ? n + 1 : n), 0)));
     }
 }
