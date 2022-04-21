@@ -8,7 +8,6 @@ const { isValidMove } = require("../logic/isValidMove");
 router.get('/:id', async (req, res, next) => {
     try {
         const game = await Game.findById(req.params.id)
-        console.log(game, req.params.id)
         res.status(200).json(game)
     }
     catch(error) {
@@ -19,7 +18,6 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', isAuthenticated, async (req, res, next) => {
 
     try {
-        console.log(req.body)
         const userToken = req.payload
         const user = await User.findOne({username: userToken.username})
         const black = await User.findOne({username: req.body.username})
@@ -42,8 +40,6 @@ router.post('/', isAuthenticated, async (req, res, next) => {
 
 router.post('/:id', isAuthenticated, async (req, res, next) => {
     try {
-        const userToken = req.payload;
-        // console.log(req.body)
         const valid = await isValidMove(req.body)
         if (valid) {
             const move = await Move.create(req.body)
@@ -59,7 +55,6 @@ router.post('/:id', isAuthenticated, async (req, res, next) => {
 
 router.put('/:id', isAuthenticated, async (req,res, next) => {
     try {
-        console.log(req.body)
         const game = await Game.findById(req.body.game)
         if(req.body.player === 'white' && req.body.y === game.boardSize) {
             await Game.findByIdAndUpdate(req.body.game, {status: 'white', duration:req.body.time})
