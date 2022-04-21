@@ -123,7 +123,7 @@ async function canUseWall(move) {
     const {player, game} = move;
     const {walls} = await Game.findById(game);
     const playerWalls = await Move.find({action: ["horizontal",  "vertical"], player: player, game: game});
-    return (playerWalls.length <= walls);
+    return (playerWalls.length < walls);
 }
 
 async function isWallPositionFree(move) {
