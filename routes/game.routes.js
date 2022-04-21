@@ -5,6 +5,17 @@ const User = require('../models/User.model');
 const { isAuthenticated } = require("../middleware/jwt.middleware");
 const { isValidMove } = require("../logic/isValidMove");
 
+router.get('/:id', async (req, res, next) => {
+    try {
+        const game = await Game.findById(req.params.id)
+        console.log(game, req.params.id)
+        res.status(200).json(game)
+    }
+    catch(error) {
+        next(error)
+    }
+})
+
 router.post('/', isAuthenticated, async (req, res, next) => {
 
     try {
@@ -32,7 +43,7 @@ router.post('/', isAuthenticated, async (req, res, next) => {
 router.post('/:id', isAuthenticated, async (req, res, next) => {
     try {
         const userToken = req.payload;
-        console.log(req.body)
+        // console.log(req.body)
         const valid = await isValidMove(req.body)
         if (valid) {
             const move = await Move.create(req.body)
@@ -40,6 +51,23 @@ router.post('/:id', isAuthenticated, async (req, res, next) => {
         } else {
             res.json("Invalid move")
         }
+    }
+    catch(error) {
+        next(error)
+    }
+})
+
+router.put('/:id', isAuthenticated, async (req,res, next) => {
+    try {
+        console.log(req.body)
+        const game = await Game.findById(req.body.game)
+        if(req.body.player === 'white' && req.body.y === game.boardSize) {
+            await Game.findByIdAndUpdate(req.body.game, {status: 'white', duration:req.body.time})
+        }
+        if(req.body.player === 'black' && req.body.y === 1) {
+            await Game.findByIdAndUpdate(req.body.game, {status: 'black', duration:req.body.time})
+        }
+        res.status(200).json(game)
     }
     catch(error) {
         next(error)
