@@ -8,23 +8,26 @@ function startPos(player, boardSize) {
 }
 
 async function isValidMove(move) {
-    if (!(await isPlayerTurn(move) && await isOrderCorrect(move))) {return 0};
-    const {boardSize} = await Game.findById(move.game);
-    if (!isInRange(move, boardSize)) {return 0};
-    if (move.action === "move") {
-        const opponent = (move.player === "white") ? "black" : "white";
-        const Pos = await Move.findOne({action: "move", player: move.player, game: move.game}).sort({order: -1}) || startPos(move.player, boardSize);
-        const oppPos = await Move.findOne({action: "move", player: opponent, game: move.game}).sort({order: -1}) || startPos(opponent, boardSize);
-        return (isMoveReachable(move, boardSize, Pos) && isPositionFree(move, oppPos)
-            && await dontCrossWall(move, Pos)
-            && await isStraightJumpValid(move, Pos, oppPos)
-            && await isSideJumpValid(move, boardSize, Pos, oppPos));
+    try {
+        if (!(await isPlayerTurn(move) && await isOrderCorrect(move))) {return 0};
+        const {boardSize} = await Game.findById(move.game);
+        if (!isInRange(move, boardSize)) {return 0};
+        if (move.action === "move") {
+            const opponent = (move.player === "white") ? "black" : "white";
+            const Pos = await Move.findOne({action: "move", player: move.player, game: move.game}).sort({order: -1}) || startPos(move.player, boardSize);
+            const oppPos = await Move.findOne({action: "move", player: opponent, game: move.game}).sort({order: -1}) || startPos(opponent, boardSize);
+            return (isMoveReachable(move, boardSize, Pos) && isPositionFree(move, oppPos)
+                && await dontCrossWall(move, Pos)
+                && await isStraightJumpValid(move, Pos, oppPos)
+                && await isSideJumpValid(move, boardSize, Pos, oppPos));
+        }
+        if (move.action === "horizontal" || move.action === "vertical") {
+            return (await canUseWall(move) && await isWallPositionFree(move))
+        };
+        return 1;
+    } catch(error) {
+        next(error);
     }
-    if (move.action === "horizontal" || move.action === "vertical") {
-        let test = await isWallPositionFree(move)
-        return (await canUseWall(move) && await isWallPositionFree(move));
-    }
-    return 1;
 }
 
 async function isPlayerTurn(move) {
@@ -62,10 +65,6 @@ function isMoveReachable(move, boardSize, Pos) {
 
 function isPositionFree(move, oppPos) {
     return (!(move.x === oppPos.x && move.y === oppPos.y))
-}
-
-function isAdjacent(x,y) {
-    return (x === y - 1 || x === y || x === y + 1)
 }
 
 async function dontCrossWall(move, Pos) {
@@ -116,7 +115,7 @@ async function isSideJumpValid(move, boardSize, Pos, oppPos) {
         let wall = await Move.findOne({x: oppPos.x - 1, y: [oppPos.y, oppPos.y - 1], action: "vertical", game: move.game});
         let sideWall = await Move.findOne({x: [Pos.x - 1, Pos.x - 2], y: Pos.y - (move.y === Pos.y - 1), action: "horizontal", game: move.game});
         return (!sideWall && (wall || oppPos.x === 1));
-    }  else {return 0};
+    } else {return 0};
 }
 
 async function canUseWall(move) {
